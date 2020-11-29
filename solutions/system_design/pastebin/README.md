@@ -120,15 +120,15 @@ Setting the primary key to be based on the `shortlink` column creates an [index]
 
 To generate the unique url, we could:
 
-* Take the [**MD5**](https://en.wikipedia.org/wiki/MD5) hash of the user's ip_address + timestamp
-    * MD5 is a widely used hashing function that produces a 128-bit hash value
-    * MD5 is uniformly distributed
-    * Alternatively, we could also take the MD5 hash of randomly-generated data
-* [**Base 62**](https://www.kerstner.at/2012/07/shortening-strings-using-base-62-encoding/) encode the MD5 hash
-    * Base 62 encodes to `[a-zA-Z0-9]` which works well for urls, eliminating the need for escaping special characters
-    * There is only one hash result for the original input and Base 62 is deterministic (no randomness involved)
-    * Base 64 is another popular encoding but provides issues for urls because of the additional `+` and `/` characters
-    * The following [Base 62 pseudocode](http://stackoverflow.com/questions/742013/how-to-code-a-url-shortener) runs in O(k) time where k is the number of digits = 7:
+* 1 Take the [**MD5**](https://en.wikipedia.org/wiki/MD5) hash of the user's ip_address + timestamp
+    * 1.1.  MD5 is a widely used hashing function that produces a 128-bit hash value
+    * 1.2.  MD5 is uniformly distributed
+    * 1.3.  Alternatively, we could also take the MD5 hash of randomly-generated data
+* 2 [**Base 62**](https://www.kerstner.at/2012/07/shortening-strings-using-base-62-encoding/) encode the MD5 hash
+    * 2.1   Base 62 encodes to `[a-zA-Z0-9]` which works well for urls, eliminating the need for escaping special characters
+    * 2.2   There is only one hash result for the original input and Base 62 is deterministic (no randomness involved)
+    * 2.3   Base 64 is another popular encoding but provides issues for urls because of the additional `+` and `/` characters
+    * 2.4   The following [Base 62 pseudocode](http://stackoverflow.com/questions/742013/how-to-code-a-url-shortener) runs in O(k) time where k is the number of digits = 7:
 
 ```python
 def base_encode(num, base=62):
@@ -165,12 +165,12 @@ For internal communications, we could use [Remote Procedure Calls](https://githu
 
 ### Use case: User enters a paste's url and views the contents
 
-* The **Client** sends a get paste request to the **Web Server**
-* The **Web Server** forwards the request to the **Read API** server
-* The **Read API** server does the following:
-    * Checks the **SQL Database** for the generated url
-        * If the url is in the **SQL Database**, fetch the paste contents from the **Object Store**
-        * Else, return an error message for the user
+* 1  The **Client** sends a get paste request to the **Web Server**
+* 2  The **Web Server** forwards the request to the **Read API** server
+* 3  The **Read API** server does the following:
+    * 3.1   Checks the **SQL Database** for the generated url
+        * a.   If the url is in the **SQL Database**, fetch the paste contents from the **Object Store**
+        * b.   Else, return an error message for the user
 
 REST API:
 
@@ -260,13 +260,13 @@ We'll introduce some components to complete the design and to address scalabilit
 * [Consistency patterns](https://github.com/donnemartin/system-design-primer#consistency-patterns)
 * [Availability patterns](https://github.com/donnemartin/system-design-primer#availability-patterns)
 
-The **Analytics Database** could use a data warehousing solution such as Amazon Redshift or Google BigQuery.
+1. The **Analytics Database** could use a data warehousing solution such as Amazon Redshift or Google BigQuery.
 
-An **Object Store** such as Amazon S3 can comfortably handle the constraint of 12.7 GB of new content per month.
+2. An **Object Store** such as Amazon S3 can comfortably handle the constraint of 12.7 GB of new content per month.
 
-To address the 40 *average* read requests per second (higher at peak), traffic for popular content should be handled by the **Memory Cache** instead of the database.  The **Memory Cache** is also useful for handling the unevenly distributed traffic and traffic spikes.  The **SQL Read Replicas** should be able to handle the cache misses, as long as the replicas are not bogged down with replicating writes.
+3. To address the 40 *average* read requests per second (higher at peak), traffic for popular content should be handled by the **Memory Cache** instead of the database.  The **Memory Cache** is also useful for handling the unevenly distributed traffic and traffic spikes.  The **SQL Read Replicas** should be able to handle the cache misses, as long as the replicas are not bogged down with replicating writes.
 
-4 *average* paste writes per second (with higher at peak) should be do-able for a single **SQL Write Master-Slave**.  Otherwise, we'll need to employ additional SQL scaling patterns:
+4. 4 *average* paste writes per second (with higher at peak) should be do-able for a single **SQL Write Master-Slave**.  Otherwise, we'll need to employ additional SQL scaling patterns:
 
 * [Federation](https://github.com/donnemartin/system-design-primer#federation)
 * [Sharding](https://github.com/donnemartin/system-design-primer#sharding)
